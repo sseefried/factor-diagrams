@@ -9,9 +9,12 @@
 <script>
 
   var FONT_SIZE = 128;
-  var R = 10; /* Radius of circle */
 
   var TEXT_ATTR = { font: "Helvetica", "font-size": FONT_SIZE};
+
+  var incAmount    = 1000;
+  var animateSpeed = 250;
+  var maxNum       = 1000;
 
   /* Diagram module */
   var Diagram = (function () {
@@ -43,7 +46,7 @@
       for (i=0; i < positions.length; i++) {
         pos     = positions[i];
         diagram = diagrams[i];
-        for (j =0; j < diagram.length; j++) {
+        for (j = 0; j < diagram.length; j++) {
           d = diagram[j];
           a[j+len] = [ d[0] + pos[0], d[1] + pos[1], d[2]];
         }
@@ -78,7 +81,7 @@
         if (p === 1) {
           return factor_diagram(ps, diagram);
         } else if (p === 2) {
-          frac = 11/16;
+          frac = 9/16;
           if (sz.width >= sz.height) {
             positions=[[0,-frac*sz.height], [0,frac*sz.height]];
           } else {
@@ -89,6 +92,15 @@
           return factor_diagram(ps, prime_diagram(p, diagram));
         }
       }
+    }
+
+    function scale(s, diagram) {
+      var a = [], d, i;
+      for (i=0; i < diagram.length; i++) {
+        d = diagram[i];
+        a[i] = [s*d[0], s*d[1], s*d[2]];
+      }
+      return a;
     }
 
 
@@ -114,7 +126,7 @@
         c = rcanvas.circle(d[0] + x_offset, d[1] + y_offset, d[2]);
         c.attr("fill", "#000");
         c.attr("stroke", "#FFF");
-        c.animate({cx: d2[0] + x_offset_2, cy: d2[1] + y_offset_2, r: d2[2]}, 500);
+        c.animate({cx: d2[0] + x_offset_2, cy: d2[1] + y_offset_2, r: d2[2]}, animateSpeed);
       }
     }
 
@@ -136,7 +148,9 @@
     /* Exported methods */
     return({ draw: draw,
              place: place,
+             scale: scale,
              factor: factor,
+             diagram_size: diagram_size,
              factor_diagram: factor_diagram });
 
   })();
@@ -145,15 +159,33 @@
     var canvas = $("#canvas");
     r = Raphael("canvas", canvas.width(), canvas.height());
 
-    var i;
-    var d = Diagram.factor_diagram([1],[[0,0,R]]);
-    var d_;
 
-    for (i=2; i < 100; i++) {
-      d_ = Diagram.factor_diagram(Diagram.factor(i),[[0,0,R]]);
-      setTimeout((function(d,d_) { return function() {r.clear(); Diagram.draw(r, d, d_); }})(d.concat([[0,0,R]]),d_), 3000*i-6000);
-      d = d_;
-    }
+    var m = Math.min(canvas.height(),canvas.width())*0.9;
+    var t = incAmount;
+
+    var scaledDiagram = function(i) {
+      var d = Diagram.factor_diagram(Diagram.factor(i),[[0,0,1]]);
+      var sz = Diagram.diagram_size(d);
+      d = Diagram.scale(m/Math.max(sz.width, sz.height), d);
+      return d;
+    };
+
+    var drawFor = function(i) {
+      var d = scaledDiagram(i);
+      d = d.concat([[0,0,d[0][2]]]);
+      var d_ = scaledDiagram(i+1);
+      setTimeout(function() {
+        r.clear();
+        Diagram.draw(r, d, d_);
+        drawFor(i+1);
+      }, t);
+    };
+
+    var i = 1;
+    var initial = scaledDiagram(i);
+    Diagram.draw(r, initial, initial);
+    drawFor(i);
+
 
 });
 
