@@ -157,6 +157,8 @@
 
   $(document).ready(function () {
     var canvas = $("#canvas");
+    var w = canvas.width(), h = canvas.height();
+
     r = Raphael("canvas", canvas.width(), canvas.height());
 
 
@@ -177,6 +179,8 @@
       setTimeout(function() {
         r.clear();
         Diagram.draw(r, d, d_);
+        r.text(w/2, h/2, (i+1).toString()).scale(30)
+         .attr({fill: '#aaaaaa', opacity: 0.5})
         drawFor(i+1);
       }, t);
     };
