@@ -1,3 +1,3 @@
 # Factor Diagrams
 
-[![Factor diagrams](factor-diagrams.gif)]
+![Factor diagrams](factor-diagrams.gif)
